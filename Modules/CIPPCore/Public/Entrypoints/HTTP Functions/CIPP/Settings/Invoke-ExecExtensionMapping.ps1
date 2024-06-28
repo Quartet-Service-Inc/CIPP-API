@@ -3,7 +3,9 @@ using namespace System.Net
 Function Invoke-ExecExtensionMapping {
     <#
     .FUNCTIONALITY
-    Entrypoint
+        Entrypoint
+    .ROLE
+        CIPP.Extension.ReadWrite
     #>
     [CmdletBinding()]
     param($Request, $TriggerMetadata)
@@ -39,11 +41,9 @@ Function Invoke-ExecExtensionMapping {
                 'Halo' {
                     $body = Set-HaloMapping -CIPPMapping $Table -APIName $APIName -Request $Request
                 }
-
                 'NinjaOrgs' {
                     $Body = Set-NinjaOneOrgMapping -CIPPMapping $Table -APIName $APIName -Request $Request
                 }
-
                 'NinjaFields' {
                     $Body = Set-NinjaOneFieldMapping -CIPPMapping $Table -APIName $APIName -Request $Request -TriggerMetadata $TriggerMetadata
                 }
@@ -58,7 +58,6 @@ Function Invoke-ExecExtensionMapping {
         if ($Request.Query.AutoMapping) {
             switch ($Request.Query.AutoMapping) {
                 'NinjaOrgs' {
-                    #Push-OutputBinding -Name NinjaProcess -Value @{'NinjaAction' = 'StartAutoMapping' }
                     $Batch = [PSCustomObject]@{
                         'NinjaAction'  = 'StartAutoMapping'
                         'FunctionName' = 'NinjaOneQueue'
@@ -68,7 +67,7 @@ Function Invoke-ExecExtensionMapping {
                         Batch            = @($Batch)
                     }
                     #Write-Host ($InputObject | ConvertTo-Json)
-                    $InstanceId = Start-NewOrchestration -FunctionName 'CIPPOrchestrator' -InputObject ($InputObject | ConvertTo-Json -Depth 5)
+                    $InstanceId = Start-NewOrchestration -FunctionName 'CIPPOrchestrator' -InputObject ($InputObject | ConvertTo-Json -Depth 5 -Compress)
                     Write-Host "Started permissions orchestration with ID = '$InstanceId'"
                     $Body = [pscustomobject]@{'Results' = 'Automapping Request has been queued. Exact name matches will appear first and matches on device names and serials will take longer. Please check the CIPP Logbook and refresh the page once complete.' }
                 }
